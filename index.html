@@ -13,14 +13,13 @@
         body { font-family: 'Crimson Pro', serif; margin: 0; overflow: hidden; background-color: #f4ede0; }
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         svg { user-select: none; -webkit-user-select: none; }
-        
-        /* Custom scrollbar for rules */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #c9b89a; border-radius: 10px; }
-        
         .tile-shadow { filter: drop-shadow(0px 3px 3px rgba(0,0,0,0.25)); }
         .glass-panel { background: rgba(250, 246, 237, 0.95); backdrop-filter: blur(8px); }
+        .toast-enter { animation: fadeUp 0.3s forwards; }
+        @keyframes fadeUp { from { opacity: 0; transform: translate(-50%, 10px); } to { opacity: 1; transform: translate(-50%, 0); } }
     </style>
 </head>
 <body>
@@ -37,12 +36,16 @@
         };
 
         // --- ICONE SVG STANDALONE ---
-        const IconRotate = ({size=20}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>;
         const IconSkip = ({size=22}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 17 5-5-5-5"/><path d="m13 17 5-5-5-5"/></svg>;
         const IconRefresh = ({size=20}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>;
         const IconInfo = ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>;
         const IconX = ({size=22}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>;
         const IconTrophy = ({size=16}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>;
+        const IconChevronLeft = ({size=20}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>;
+        const IconChevronRight = ({size=20}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>;
+        const IconChevronsLeft = ({size=20}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg>;
+        const IconChevronsRight = ({size=20}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 17 5-5-5-5"/><path d="m13 17 5-5-5-5"/></svg>;
+        const IconShare = ({size=20}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>;
 
         // ============================================================================
         // LOGICA DI GIOCO E PUNTEGGIO
@@ -219,7 +222,7 @@
                         <div className="p-6 space-y-6 text-base leading-relaxed font-serif">
                             <div className="bg-white/50 p-4 rounded-xl border border-amber-900/10">
                                 <h3 className="font-bold text-lg mb-2 text-amber-800 flex items-center gap-2"><span className="bg-amber-800 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm">1</span> Placement</h3>
-                                <p>The first tile (Seed) can be placed anywhere. Every subsequent tile must be placed orthogonally adjacent (up, down, left, right) to at least one existing tile. <strong>Rule:</strong> You cannot place a tile inside a completely closed territory.</p>
+                                <p>The first tile (Seed) can be placed anywhere. Every subsequent tile must be placed orthogonally adjacent (up, down, left, right) to at least one existing tile. <strong>Rule:</strong> You cannot place a tile inside a 4-sided hole <em>unless</em> that move immediately completes a circuit for your color.</p>
                             </div>
                             <div className="bg-white/50 p-4 rounded-xl border border-amber-900/10">
                                 <h3 className="font-bold text-lg mb-2 text-amber-800 flex items-center gap-2"><span className="bg-amber-800 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm">2</span> Passing & Ending</h3>
@@ -246,24 +249,74 @@
 
         function App() {
             const [phase, setPhase] = useState('setup');
-            
             const [tilesInput, setTilesInput] = useState('35');
             const [komiInput, setKomiInput] = useState('0');
             const [komiTo, setKomiTo] = useState('black');
-
-            const [tiles, setTiles] = useState({});
-            const [currentPlayer, setCurrentPlayer] = useState('black');
-            const [blackLeft, setBlackLeft] = useState(35);
-            const [amberLeft, setAmberLeft] = useState(35);
-            const [lastPassed, setLastPassed] = useState(null);
+            
+            // Stato centrale basato sulla "Cronologia" (Time Travel)
             const [history, setHistory] = useState([]);
+            const [currentStep, setCurrentStep] = useState(0);
+            
             const [showRules, setShowRules] = useState(false);
+            const [toast, setToast] = useState('');
 
-            const startGame = () => {
-                const t = Math.max(10, Number(tilesInput) || 35);
-                setBlackLeft(t); setAmberLeft(t);
-                setTiles({}); setCurrentPlayer('black'); setLastPassed(null); setHistory([]); setPhase('playing');
-            };
+            // --- CARICAMENTO DA URL ---
+            useEffect(() => {
+                const hash = window.location.hash;
+                if (hash && hash.startsWith('#t=')) {
+                    const params = new URLSearchParams(hash.substring(1));
+                    const t = params.get('t');
+                    const k = params.get('k');
+                    const kt = params.get('kt');
+                    const m = params.get('m');
+                    
+                    if (t) setTilesInput(t);
+                    if (k) setKomiInput(k);
+                    if (kt) setKomiTo(kt);
+                    
+                    if (m) {
+                        const loadedHistory = [];
+                        let p = 'black';
+                        const moves = m.split(';').filter(Boolean);
+                        for (const moveStr of moves) {
+                            if (moveStr === 'p') {
+                                loadedHistory.push({ type: 'pass', player: p });
+                            } else {
+                                loadedHistory.push({ type: 'place', player: p, key: moveStr });
+                            }
+                            p = p === 'black' ? 'amber' : 'black';
+                        }
+                        setHistory(loadedHistory);
+                        setCurrentStep(loadedHistory.length);
+                        setPhase('playing');
+                    }
+                }
+            }, []);
+
+            // --- STATO DERIVATO ---
+            const { tiles, currentPlayer, blackLeft, amberLeft, lastPassed, consecutivePasses } = useMemo(() => {
+                let t = {};
+                let p = 'black';
+                let bl = Number(tilesInput) || 35;
+                let al = Number(tilesInput) || 35;
+                let lp = null;
+                let passCount = 0;
+                
+                for(let i = 0; i < currentStep; i++) {
+                    const m = history[i];
+                    if(m.type === 'place') {
+                        t[m.key] = m.player;
+                        if(m.player === 'black') bl--; else al--;
+                        lp = null;
+                        passCount = 0;
+                    } else if (m.type === 'pass') {
+                        lp = m.player;
+                        passCount++;
+                    }
+                    p = p === 'black' ? 'amber' : 'black';
+                }
+                return { tiles: t, currentPlayer: p, blackLeft: bl, amberLeft: al, lastPassed: lp, consecutivePasses: passCount };
+            }, [history, currentStep, tilesInput]);
 
             const analysis = useMemo(() => analyzeBoard(tiles), [tiles]);
             
@@ -274,58 +327,86 @@
                 return { black: b, amber: a };
             }, [analysis, komiInput, komiTo]);
 
+            const isEnded = (blackLeft <= 0 && amberLeft <= 0) || consecutivePasses >= 2;
+
+            // --- LOGICA DI PIAZZAMENTO (SEAL EXCEPTION) ---
             const validPlacements = useMemo(() => {
                 const tileKeys = Object.keys(tiles);
                 if (tileKeys.length === 0) return new Set(['0,0']);
                 const valid = new Set();
+                
+                // Trova tutte le celle adiacenti vuote
+                const candidates = new Set();
                 for (const key of tileKeys) {
                     const [x, y] = key.split(',').map(Number);
                     for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]) {
-                        const nx = x + dx, ny = y + dy; const k = `${nx},${ny}`;
-                        if (tiles[k] || analysis.closedCells.has(k)) continue;
-                        let occ = 0;
-                        for (const [ddx, ddy] of [[1,0],[-1,0],[0,1],[0,-1]]) if (tiles[`${nx+ddx},${ny+ddy}`]) occ++;
-                        if (occ < 4) valid.add(k);
+                        const nx = x + dx, ny = y + dy; 
+                        const k = `${nx},${ny}`;
+                        if (!tiles[k] && !analysis.closedCells.has(k)) candidates.add(k);
+                    }
+                }
+
+                for (const k of candidates) {
+                    const [x, y] = k.split(',').map(Number);
+                    let occ = 0;
+                    for (const [ddx, ddy] of [[1,0],[-1,0],[0,1],[0,-1]]) if (tiles[`${x+ddx},${y+ddy}`]) occ++;
+                    
+                    if (occ < 4) {
+                        valid.add(k); // Valido di default
+                    } else {
+                        // SEAL EXCEPTION: Simula la mossa se siamo in un "buco" di 4 lati
+                        const simTiles = { ...tiles, [k]: currentPlayer };
+                        const simAnalysis = analyzeBoard(simTiles);
+                        
+                        const currTerr = analysis.territoriesByColor[currentPlayer].size;
+                        const simTerr = simAnalysis.territoriesByColor[currentPlayer].size;
+                        const currPris = analysis.prisonersByColor[currentPlayer].size;
+                        const simPris = simAnalysis.prisonersByColor[currentPlayer].size;
+                        
+                        // È valido SOLO se aumenta i punti del territorio o dei prigionieri (ha chiuso un circuito utile)
+                        if (simTerr > currTerr || simPris > currPris) {
+                            valid.add(k);
+                        }
                     }
                 }
                 return valid;
-            }, [tiles, analysis]);
+            }, [tiles, analysis, currentPlayer]);
 
             const tilesLeftForCurrent = currentPlayer === 'black' ? blackLeft : amberLeft;
-            const mustPass = phase === 'playing' && (tilesLeftForCurrent <= 0 || validPlacements.size === 0);
+            const mustPass = !isEnded && (tilesLeftForCurrent <= 0 || validPlacements.size === 0);
+
+            // --- AZIONI DI GIOCO ---
+            const startGame = () => {
+                setHistory([]); setCurrentStep(0); setPhase('playing');
+            };
+
+            const executeMove = (moveObj) => {
+                // Se stiamo viaggiando nel tempo, tronca la storia futura
+                const newHistory = history.slice(0, currentStep);
+                newHistory.push(moveObj);
+                setHistory(newHistory);
+                setCurrentStep(newHistory.length);
+            };
 
             const placeTile = (key) => {
-                if (phase !== 'playing' || !validPlacements.has(key) || tilesLeftForCurrent <= 0) return;
-                setTiles({ ...tiles, [key]: currentPlayer });
-                if (currentPlayer === 'black') setBlackLeft(b => b - 1); else setAmberLeft(a => a - 1);
-                setLastPassed(null);
-                setHistory(h => [...h, { type: 'place', player: currentPlayer, key }]);
-                setCurrentPlayer(p => p === 'black' ? 'amber' : 'black');
+                if (isEnded || phase !== 'playing' || !validPlacements.has(key) || tilesLeftForCurrent <= 0) return;
+                executeMove({ type: 'place', player: currentPlayer, key });
             };
 
             const pass = () => {
-                if (phase !== 'playing') return;
-                const newH = [...history, { type: 'pass', player: currentPlayer }];
-                if (lastPassed && lastPassed !== currentPlayer) { setHistory(newH); setPhase('ended'); return; }
-                setLastPassed(currentPlayer); setHistory(newH);
-                setCurrentPlayer(p => p === 'black' ? 'amber' : 'black');
+                if (isEnded || phase !== 'playing') return;
+                executeMove({ type: 'pass', player: currentPlayer });
             };
 
-            const undo = () => {
-                if (history.length === 0) return;
-                const last = history[history.length - 1]; const newH = history.slice(0, -1);
-                if (phase === 'ended') setPhase('playing');
-                if (last.type === 'place') {
-                    const newTiles = { ...tiles }; delete newTiles[last.key]; setTiles(newTiles);
-                    if (last.player === 'black') setBlackLeft(b => b + 1); else setAmberLeft(a => a + 1);
-                }
-                const prev = newH[newH.length - 1]; setLastPassed(prev?.type === 'pass' ? prev.player : null);
-                setCurrentPlayer(last.player); setHistory(newH);
+            const shareGame = () => {
+                const movesStr = history.map(h => h.type === 'pass' ? 'p' : h.key).join(';');
+                const hash = `t=${tilesInput}&k=${komiInput}&kt=${komiTo}&m=${movesStr}`;
+                const url = window.location.origin + window.location.pathname + '#' + hash;
+                navigator.clipboard.writeText(url).then(() => {
+                    setToast('Game link copied to clipboard!');
+                    setTimeout(() => setToast(''), 3000);
+                });
             };
-
-            useEffect(() => {
-                if (phase === 'playing' && blackLeft === 0 && amberLeft === 0) setPhase('ended');
-            }, [blackLeft, amberLeft, phase]);
 
             const bbox = useMemo(() => {
                 const tk = Object.keys(tiles);
@@ -368,11 +449,11 @@
             // --- RENDER GIOCO ---
             const viewBox = `${bbox.minX * CELL} ${bbox.minY * CELL} ${(bbox.maxX - bbox.minX + 1) * CELL} ${(bbox.maxY - bbox.minY + 1) * CELL}`;
             let statusText = `It's ${currentPlayer === 'black' ? 'Black' : 'Amber'}'s turn`;
-            if (phase === 'playing') {
-                if (mustPass) statusText = 'You must pass — no moves or tiles left';
-                else if (lastPassed && lastPassed !== currentPlayer) statusText = 'Opponent passed. End game?';
-            }
-            const winner = phase === 'ended' ? (scoring.black > scoring.amber ? 'black' : scoring.amber > scoring.black ? 'amber' : 'tie') : null;
+            if (currentStep < history.length && !isEnded) statusText = `Viewing Past (Move ${currentStep}) - Click to fork`;
+            else if (mustPass) statusText = 'You must pass — no moves or tiles left';
+            else if (lastPassed && lastPassed !== currentPlayer && !isEnded) statusText = 'Opponent passed. End game?';
+            
+            const winner = isEnded ? (scoring.black > scoring.amber ? 'black' : scoring.amber > scoring.black ? 'amber' : 'tie') : null;
             const fmt = (n) => Number.isInteger(n) ? n : Number(n).toFixed(1);
 
             return (
@@ -380,14 +461,14 @@
                     <div className="flex items-center justify-between px-4 py-3 border-b shadow-sm z-10" style={{ borderColor: C.line, backgroundColor: C.bgLight }}>
                         <h1 className="font-serif text-lg font-bold tracking-[0.3em]" style={{ color: C.text }}>TRAME</h1>
                         <div className="flex items-center gap-3">
-                            <PlayerBadge color="black" left={blackLeft} active={phase === 'playing' && currentPlayer === 'black'} score={scoring.black} />
-                            <PlayerBadge color="amber" left={amberLeft} active={phase === 'playing' && currentPlayer === 'amber'} score={scoring.amber} />
+                            <PlayerBadge color="black" left={blackLeft} active={!isEnded && currentPlayer === 'black'} score={scoring.black} />
+                            <PlayerBadge color="amber" left={amberLeft} active={!isEnded && currentPlayer === 'amber'} score={scoring.amber} />
                             <button onClick={() => setShowRules(true)} className="p-2 ml-1 rounded-full hover:bg-black/5 transition-colors"><IconInfo size={20} style={{ color: C.textMuted }} /></button>
                         </div>
                     </div>
 
-                    {phase === 'playing' && <div className="px-3 py-2 text-sm text-center font-serif font-medium tracking-wide shadow-inner" style={{ color: C.text, backgroundColor: C.bgDark }}>{statusText}</div>}
-                    {phase === 'ended' && (
+                    {!isEnded && <div className={`px-3 py-2 text-sm text-center font-serif font-medium tracking-wide shadow-inner ${currentStep < history.length ? 'bg-amber-200/50' : ''}`} style={{ color: C.text, backgroundColor: currentStep === history.length ? C.bgDark : undefined }}>{statusText}</div>}
+                    {isEnded && (
                         <div className="px-3 py-4 text-center shadow-md z-10" style={{ backgroundColor: winner === 'tie' ? C.bgDark : (winner === 'black' ? C.black : C.amber), color: winner === 'tie' ? C.text : '#fff' }}>
                             <div className="flex items-center justify-center gap-2"><IconTrophy size={20} /> <span className="font-serif tracking-widest text-base font-bold">{winner === 'tie' ? `DRAW · ${fmt(scoring.black)} − ${fmt(scoring.amber)}` : `${winner === 'black' ? 'BLACK' : 'AMBER'} WINS · ${fmt(scoring.black)} − ${fmt(scoring.amber)}`}</span></div>
                         </div>
@@ -395,28 +476,21 @@
 
                     <div className="flex-1 relative overflow-hidden" style={{ backgroundColor: C.bg }}>
                         <svg viewBox={viewBox} className="absolute inset-0 w-full h-full" preserveAspectRatio="xMidYMid meet">
-                            {/* Grid Lines */}
                             {Array.from({ length: bbox.maxX - bbox.minX + 2 }, (_, i) => <line key={`gx${i}`} x1={(bbox.minX + i) * CELL} y1={bbox.minY * CELL} x2={(bbox.minX + i) * CELL} y2={(bbox.maxY + 1) * CELL} stroke={C.line} strokeWidth="1" opacity="0.4" pointerEvents="none" />)}
                             {Array.from({ length: bbox.maxY - bbox.minY + 2 }, (_, i) => <line key={`gy${i}`} x1={bbox.minX * CELL} y1={(bbox.minY + i) * CELL} x2={(bbox.maxX + 1) * CELL} y2={(bbox.minY + i) * CELL} stroke={C.line} strokeWidth="1" opacity="0.4" pointerEvents="none" />)}
                             
-                            {/* Territories */}
                             {analysis.territories.map((t, ti) => t.cells.map((cellKey) => {
                                 const [x, y] = cellKey.split(',').map(Number);
-                                return <rect key={`t${ti}_${cellKey}`} x={x * CELL} y={y * CELL} width={CELL} height={CELL} fill={t.owner === 'black' ? C.black : C.amber} opacity={phase === 'playing' ? 0.12 : 0.22} pointerEvents="none" />;
+                                return <rect key={`t${ti}_${cellKey}`} x={x * CELL} y={y * CELL} width={CELL} height={CELL} fill={t.owner === 'black' ? C.black : C.amber} opacity={!isEnded ? 0.12 : 0.22} pointerEvents="none" />;
                             }))}
                             
-                            {/* Tiles */}
                             {Object.entries(tiles).map(([k, color]) => {
                                 const [x, y] = k.split(',').map(Number);
                                 const isDead = analysis.dead.has(k);
                                 return (
                                     <g key={k} pointerEvents="none" className="transition-all duration-300">
-                                        {/* Drop shadow trick inside SVG or class */}
                                         <rect x={x * CELL + 4} y={y * CELL + 4} width={CELL - 8} height={CELL - 8} fill={color === 'black' ? C.black : C.amber} rx="12" opacity={isDead ? 0.4 : 1} className="tile-shadow" stroke="rgba(255,255,255,0.15)" strokeWidth="2" />
-                                        
-                                        {/* Subtle inner highlight to make it look like a physical tile */}
                                         {!isDead && <rect x={x * CELL + 6} y={y * CELL + 6} width={CELL - 12} height={CELL - 12} fill="none" rx="10" stroke="rgba(255,255,255,0.1)" strokeWidth="2" />}
-
                                         {isDead && (
                                             <g>
                                                 <line x1={x * CELL + 30} y1={y * CELL + 30} x2={x * CELL + CELL - 30} y2={y * CELL + CELL - 30} stroke={color === 'black' ? C.amber : C.bg} strokeWidth="5" strokeLinecap="round" opacity="0.9" />
@@ -427,8 +501,7 @@
                                 );
                             })}
                             
-                            {/* Valid Placements (Hover/Click areas) */}
-                            {phase === 'playing' && Array.from(validPlacements).map((k) => {
+                            {!isEnded && Array.from(validPlacements).map((k) => {
                                 const [x, y] = k.split(',').map(Number);
                                 const isFirst = Object.keys(tiles).length === 0;
                                 return (
@@ -440,6 +513,13 @@
                                 );
                             })}
                         </svg>
+                        
+                        {/* Toast Notification */}
+                        {toast && (
+                            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/80 text-white px-4 py-2 rounded-full text-sm font-sans tracking-wide z-50 toast-enter backdrop-blur-sm">
+                                {toast}
+                            </div>
+                        )}
                     </div>
 
                     <div className="px-4 py-2 text-xs font-serif text-center z-10 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]" style={{ color: C.text, backgroundColor: C.bgLight, borderTop: `1px solid ${C.line}` }}>
@@ -447,18 +527,36 @@
                         <span><strong className="text-amber-700 text-sm">Amber</strong>: {analysis.breakdown.amber.vacant} terr. + {analysis.breakdown.amber.prisoners} capt.</span>
                     </div>
 
-                    <div className="flex items-center justify-around p-4 border-t z-10" style={{ borderColor: C.line, backgroundColor: C.bgLight }}>
-                        <button onClick={undo} disabled={history.length === 0} className="flex flex-col items-center gap-1.5 px-4 py-2 rounded-xl hover:bg-black/5 transition-colors disabled:opacity-30 disabled:hover:bg-transparent">
-                            <IconRotate size={22} /> <span className="text-[12px] font-bold font-serif uppercase tracking-widest">Undo</span>
-                        </button>
-                        {phase === 'playing' && (
-                            <button onClick={pass} className="flex flex-col items-center gap-1.5 px-8 py-2 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-0.5" style={{ backgroundColor: lastPassed && lastPassed !== currentPlayer ? C.amber : (mustPass ? C.text : 'rgba(0,0,0,0.05)'), color: (lastPassed && lastPassed !== currentPlayer) || mustPass ? '#fff' : C.text }}>
-                                <IconSkip size={24} /> <span className="text-[12px] font-bold font-serif uppercase tracking-widest">{lastPassed && lastPassed !== currentPlayer ? 'End Game' : 'Pass'}</span>
+                    <div className="flex flex-col border-t z-10" style={{ borderColor: C.line, backgroundColor: C.bgLight }}>
+                        {/* Time Travel Bar */}
+                        <div className="flex items-center justify-between px-4 py-2 border-b" style={{ borderColor: 'rgba(0,0,0,0.05)', backgroundColor: 'rgba(0,0,0,0.02)' }}>
+                            <div className="flex items-center gap-1">
+                                <button onClick={() => setCurrentStep(0)} disabled={currentStep === 0} className="p-1.5 rounded-md hover:bg-black/5 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"><IconChevronsLeft size={18} /></button>
+                                <button onClick={() => setCurrentStep(s => Math.max(0, s - 1))} disabled={currentStep === 0} className="p-1.5 rounded-md hover:bg-black/5 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"><IconChevronLeft size={18} /></button>
+                            </div>
+                            <span className="text-[11px] font-bold font-serif tracking-widest uppercase opacity-70">
+                                Move {currentStep} / {history.length}
+                            </span>
+                            <div className="flex items-center gap-1">
+                                <button onClick={() => setCurrentStep(s => Math.min(history.length, s + 1))} disabled={currentStep === history.length} className="p-1.5 rounded-md hover:bg-black/5 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"><IconChevronRight size={18} /></button>
+                                <button onClick={() => setCurrentStep(history.length)} disabled={currentStep === history.length} className="p-1.5 rounded-md hover:bg-black/5 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"><IconChevronsRight size={18} /></button>
+                            </div>
+                        </div>
+                        
+                        {/* Action Buttons */}
+                        <div className="flex items-center justify-around p-3">
+                            <button onClick={shareGame} className="flex flex-col items-center gap-1.5 px-4 py-2 rounded-xl hover:bg-black/5 transition-colors">
+                                <IconShare size={20} /> <span className="text-[11px] font-bold font-serif uppercase tracking-widest">Share</span>
                             </button>
-                        )}
-                        <button onClick={() => setPhase('setup')} className="flex flex-col items-center gap-1.5 px-4 py-2 rounded-xl hover:bg-black/5 transition-colors">
-                            <IconRefresh size={22} /> <span className="text-[12px] font-bold font-serif uppercase tracking-widest">New</span>
-                        </button>
+                            {!isEnded && (
+                                <button onClick={pass} className="flex flex-col items-center gap-1.5 px-8 py-2 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-0.5" style={{ backgroundColor: lastPassed && lastPassed !== currentPlayer ? C.amber : (mustPass ? C.text : 'rgba(0,0,0,0.05)'), color: (lastPassed && lastPassed !== currentPlayer) || mustPass ? '#fff' : C.text }}>
+                                    <IconSkip size={20} /> <span className="text-[11px] font-bold font-serif uppercase tracking-widest">{lastPassed && lastPassed !== currentPlayer ? 'End Game' : 'Pass'}</span>
+                                </button>
+                            )}
+                            <button onClick={() => setPhase('setup')} className="flex flex-col items-center gap-1.5 px-4 py-2 rounded-xl hover:bg-black/5 transition-colors">
+                                <IconRefresh size={20} /> <span className="text-[11px] font-bold font-serif uppercase tracking-widest">New</span>
+                            </button>
+                        </div>
                     </div>
 
                     {showRules && <RulesModal onClose={() => setShowRules(false)} />}
