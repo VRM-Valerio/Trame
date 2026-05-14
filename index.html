@@ -86,7 +86,8 @@
                 }
             }
 
-            const dead = new Set();
+            const dead = new Set();       // exterior-liberty rule → territory scoring
+            const visualDead = new Set(); // zero-liberty rule    → X mark display only
             const checkedStones = new Set();
 
             for (const startKey of tileKeys) {
@@ -94,7 +95,8 @@
                 const startColor = tiles[startKey];
                 const componentStones = new Set();
                 const stack = [startKey];
-                let isAlive = false;
+                let hasExteriorLiberty = false;
+                let hasAnyLiberty = false;
 
                 while (stack.length) {
                     const k = stack.pop();
@@ -105,11 +107,16 @@
                     for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]) {
                         const nx = cx + dx, ny = cy + dy;
                         const nk = `${nx},${ny}`;
-                        if (!tiles[nk]) { isAlive = true; } 
-                        else if (tiles[nk] === startColor) { if (!checkedStones.has(nk)) stack.push(nk); }
+                        if (!tiles[nk]) {
+                            hasAnyLiberty = true;
+                            if (exterior.has(nk)) hasExteriorLiberty = true;
+                        } else if (tiles[nk] === startColor) {
+                            if (!checkedStones.has(nk)) stack.push(nk);
+                        }
                     }
                 }
-                if (!isAlive) { for (const stoneKey of componentStones) dead.add(stoneKey); }
+                if (!hasExteriorLiberty) { for (const s of componentStones) dead.add(s); }
+                if (!hasAnyLiberty)      { for (const s of componentStones) visualDead.add(s); }
             }
 
             const territoriesByColor = { black: new Set(), amber: new Set() };
@@ -155,7 +162,7 @@
             };
             findTerritories('black', 'amber');
             findTerritories('amber', 'black');
-            return { dead, territoriesByColor, prisonersByColor, closedCells, territories,
+            return { dead, visualDead, territoriesByColor, prisonersByColor, closedCells, territories,
                 breakdown: { black: { vacant: territoriesByColor.black.size, prisoners: prisonersByColor.black.size },
                              amber: { vacant: territoriesByColor.amber.size, prisoners: prisonersByColor.amber.size } } };
         }
@@ -187,7 +194,7 @@
                         <div className="p-6 space-y-6 text-base leading-relaxed font-serif">
                             <div className="bg-white/50 p-4 rounded-xl border border-amber-900/10">
                                 <h3 className="font-bold text-lg mb-2 text-amber-800 flex items-center gap-2"><span className="bg-amber-800 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm">1</span> Placement</h3>
-                                <p>The first tile (Seed) can be placed anywhere. Every subsequent tile must be placed orthogonally adjacent (up, down, left, right) to at least one existing tile. <strong>Rule:</strong> You cannot place a tile inside a 4-sided hole <em>unless</em> that move immediately completes a circuit for your color.</p>
+                                <p>The first tile (Seed) can be placed anywhere. Every subsequent tile must be placed orthogonally adjacent to at least one existing tile. <strong>Breathing Room rule:</strong> you cannot place in a cell with all 4 sides occupied, <em>unless</em> that placement immediately closes a new territory for you. You also cannot place inside an already closed territory, with the same exception.</p>
                             </div>
                             <div className="bg-white/50 p-4 rounded-xl border border-amber-900/10">
                                 <h3 className="font-bold text-lg mb-2 text-amber-800 flex items-center gap-2"><span className="bg-amber-800 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm">2</span> Passing & Ending</h3>
@@ -266,21 +273,29 @@
             const validPlacements = useMemo(() => {
                 const tileKeys = Object.keys(tiles); if (tileKeys.length === 0) return new Set(['0,0']);
                 const valid = new Set(), candidates = new Set();
+                // Collect ALL empty cells adjacent to any existing tile (no pre-filtering of closedCells)
                 for (const key of tileKeys) {
                     const [x, y] = key.split(',').map(Number);
                     for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]) {
                         const nx = x + dx, ny = y + dy, k = `${nx},${ny}`;
-                        if (!tiles[k] && !analysis.closedCells.has(k)) candidates.add(k);
+                        if (!tiles[k]) candidates.add(k);
                     }
                 }
                 for (const k of candidates) {
                     const [x, y] = k.split(',').map(Number);
                     let occ = 0; for (const [ddx, ddy] of [[1,0],[-1,0],[0,1],[0,-1]]) if (tiles[`${x+ddx},${y+ddy}`]) occ++;
-                    if (occ < 4) { valid.add(k); } 
-                    else {
-                        const simTiles = { ...tiles, [k]: currentPlayer }, simAnalysis = analyzeBoard(simTiles);
-                        if (simAnalysis.territoriesByColor[currentPlayer].size > analysis.territoriesByColor[currentPlayer].size || 
-                            simAnalysis.prisonersByColor[currentPlayer].size > analysis.prisonersByColor[currentPlayer].size) { valid.add(k); }
+                    const inClosed = analysis.closedCells.has(k);
+                    if (occ < 4 && !inClosed) {
+                        // Normal move: has breathing room and not inside closed territory
+                        valid.add(k);
+                    } else {
+                        // Restricted (no breathing room OR inside closed territory).
+                        // Allowed ONLY if the placement creates new territory for the current player.
+                        const simTiles = { ...tiles, [k]: currentPlayer };
+                        const simAnalysis = analyzeBoard(simTiles);
+                        if (simAnalysis.territoriesByColor[currentPlayer].size > analysis.territoriesByColor[currentPlayer].size) {
+                            valid.add(k);
+                        }
                     }
                 }
                 return valid;
@@ -366,7 +381,9 @@
                             {Array.from({ length: bbox.maxY - bbox.minY + 2 }, (_, i) => <line key={`gy${i}`} x1={bbox.minX * CELL} y1={(bbox.minY + i) * CELL} x2={(bbox.maxX + 1) * CELL} y2={(bbox.minY + i) * CELL} stroke={C.line} strokeWidth="1" opacity="0.4" pointerEvents="none" />)}
                             {analysis.territories.map((t, ti) => t.cells.map((cellKey) => { const [x, y] = cellKey.split(',').map(Number); return <rect key={`t${ti}_${cellKey}`} x={x * CELL} y={y * CELL} width={CELL} height={CELL} fill={t.owner === 'black' ? C.black : C.amber} opacity={!isEnded ? 0.12 : 0.22} pointerEvents="none" />; }))}
                             {Object.entries(tiles).map(([k, color]) => {
-                                const [x, y] = k.split(',').map(Number), isDead = analysis.dead.has(k);
+                                const [x, y] = k.split(',').map(Number);
+                                // Show X mark only when the stone actually scores as a prisoner
+                                const isDead = analysis.prisonersByColor.black.has(k) || analysis.prisonersByColor.amber.has(k);
                                 return ( <g key={k} pointerEvents="none" className="transition-all duration-300"> <rect x={x * CELL + 4} y={y * CELL + 4} width={CELL - 8} height={CELL - 8} fill={color === 'black' ? C.black : C.amber} rx="12" opacity={isDead ? 0.4 : 1} className="tile-shadow" stroke="rgba(255,255,255,0.15)" strokeWidth="2" /> {!isDead && <rect x={x * CELL + 6} y={y * CELL + 6} width={CELL - 12} height={CELL - 12} fill="none" rx="10" stroke="rgba(255,255,255,0.1)" strokeWidth="2" />} {isDead && ( <g> <line x1={x * CELL + 30} y1={y * CELL + 30} x2={x * CELL + CELL - 30} y2={y * CELL + CELL - 30} stroke={color === 'black' ? C.amber : C.bg} strokeWidth="5" strokeLinecap="round" opacity="0.9" /> <line x1={x * CELL + CELL - 30} y1={y * CELL + 30} x2={x * CELL + 30} y2={y * CELL + CELL - 30} stroke={color === 'black' ? C.amber : C.bg} strokeWidth="5" strokeLinecap="round" opacity="0.9" /> </g> )} </g> );
                             })}
                             {!isEnded && Array.from(validPlacements).map((k) => {
